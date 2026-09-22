@@ -1,0 +1,5 @@
+// This file intentionally left empty — it ensures the uploads directory
+// exists in the repository. On production (VPS), set UPLOADS_DIR to an
+// absolute path outside the repo (e.g. /var/data/roofing-uploads) and
+// symlink or mount it, so `git pull` / rebuild never wipes user uploads.
+// See README.md → Deployment → Uploads for details.

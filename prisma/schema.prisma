@@ -1,0 +1,776 @@
+// ===========================================================================
+// Roofing Platform - Prisma schema
+// ---------------------------------------------------------------------------
+// Provider: SQLite is used for local development (zero external setup).
+// For PostgreSQL production deployments run:  npm run db:use-postgres
+// That script flips the provider below to "postgresql". The data model is
+// written so it works identically on both providers.
+// ===========================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+enum SystemRole {
+  SUPER_ADMIN
+  ADMINISTRATOR
+  EDITOR
+  SALES
+  MARKETING
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  INSPECTION_SCHEDULED
+  ESTIMATE_SENT
+  WON
+  LOST
+}
+
+enum LeadSource {
+  FREE_ESTIMATE
+  CONTACT_FORM
+  INSPECTION_REQUEST
+  EMERGENCY
+  FINANCING
+  PHONE
+  OTHER
+}
+
+enum ReviewSource {
+  GOOGLE
+  FACEBOOK
+  WEBSITE
+  ANGIE
+  BBB
+  OTHER
+}
+
+enum PublicationStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  PDF
+  DOCUMENT
+  LOGO
+  ICON
+}
+
+enum FormFieldType {
+  TEXT
+  TEXTAREA
+  EMAIL
+  PHONE
+  NUMBER
+  DATE
+  SELECT
+  RADIO
+  CHECKBOX
+  FILE
+  HIDDEN
+}
+
+enum RedirectType {
+  PERMANENT
+  TEMPORARY
+}
+
+enum ActivityAction {
+  LOGIN
+  LOGOUT
+  CREATE
+  UPDATE
+  DELETE
+  STATUS_CHANGE
+  SETTINGS_CHANGE
+  SECURITY_CHANGE
+  BACKUP
+  EXPORT
+}
+
+// ---------------------------------------------------------------------------
+// Users, roles, permissions
+// ---------------------------------------------------------------------------
+model User {
+  id            String       @id @default(cuid())
+  name          String
+  email         String       @unique
+  passwordHash  String
+  role          SystemRole   @default(EDITOR)
+  isActive      Boolean      @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  leads         Lead[]       @relation("AssignedLeads")
+  leadNotes     LeadNote[]
+  activityLogs  ActivityLog[]
+  blogPosts     BlogPost[]
+
+  @@index([email])
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// Company settings (singleton) + branding / appearance
+// ---------------------------------------------------------------------------
+model CompanySetting {
+  id                    String   @id @default(cuid())
+
+  // Identity
+  name                  String
+  tagline               String?
+  legalName             String?
+  logoId                String?      @unique
+  faviconId             String?      @unique
+  description           String?
+
+  // Contact
+  phone                 String?
+  emergencyPhone        String?
+  email                 String?
+  addressLine1          String?
+  addressLine2          String?
+  city                  String?
+  state                 String?
+  postalCode            String?
+  country               String?  @default("US")
+  businessHours         String?
+  emergencyAvailable    Boolean  @default(false)
+  emergencyHoursLabel   String?
+
+  // Trust / stats (must be factual, entered by admin)
+  yearsInBusiness       Int      @default(0)
+  roofsCompleted        Int      @default(0)
+  googleRating          Float    @default(0)
+  reviewCount           Int      @default(0)
+  licenseNumber         String?
+  insuranceInfo         String?
+  warrantySummary       String?
+
+  // Web
+  websiteUrl            String?
+  googleBusinessUrl     String?
+  serviceAreaNote       String?
+
+  // Social
+  socialFacebook        String?
+  socialInstagram       String?
+  socialX               String?
+  socialYoutube         String?
+  socialLinkedin        String?
+
+  // Emergency / announcement
+  announcementEnabled   Boolean  @default(true)
+  announcementText      String?
+  announcementLink      String?
+  announcementLabel     String?
+  announcementBg        String?
+  announcementStartAt   DateTime?
+  announcementEndAt     DateTime?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  logo                  Media?   @relation("CompanyLogo",       fields: [logoId],    references: [id], onDelete: SetNull)
+  favicon               Media?   @relation("CompanyFavicon",    fields: [faviconId], references: [id], onDelete: SetNull)
+
+  @@map("company_settings")
+}
+
+model SiteSetting {
+  id              String   @id @default(cuid())
+  key             String   @unique
+  value           String?
+  jsonValue       Json?
+  group           String   @default("general")
+  updatedAt       DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+// ---------------------------------------------------------------------------
+// Services (incl. roofing materials modelled as serviceType MATERIAL)
+// ---------------------------------------------------------------------------
+model Service {
+  id              String         @id @default(cuid())
+  name            String
+  slug            String         @unique
+  kind            String         @default("SERVICE") // SERVICE | MATERIAL
+  excerpt         String?
+  description     String?        
+  heroImageId     String?
+  icon            String?
+  order           Int            @default(0)
+  isFeatured      Boolean        @default(false)
+  isEnabled       Boolean        @default(true)
+
+  // Structured content blocks
+  benefits        Json?          // string[]
+  process         Json?          // {title, description}[]
+  faqs            Json?          // {question, answer}[] (denormalised copy)
+  materials       Json?          // string[]
+  warranty        String?
+  financingNote   String?
+  ctaLabel        String?
+
+  // SEO
+  seoTitle        String?
+  seoDescription  String?
+  ogImageId       String?
+  isIndexed       Boolean        @default(true)
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  heroImage       Media?         @relation("ServiceHero",        fields: [heroImageId], references: [id], onDelete: SetNull)
+  ogImage         Media?         @relation("ServiceOG",          fields: [ogImageId],   references: [id], onDelete: SetNull)
+
+  projects        Project[]
+  reviews         Review[]
+  leads           Lead[]
+  locations       Location[]     @relation("LocationServices")
+  blogPosts       BlogPost[]
+  faqItems        Faq[]
+  offers          Offer[]
+
+  @@index([slug])
+  @@map("services")
+}
+
+// ---------------------------------------------------------------------------
+// Locations / service areas
+// ---------------------------------------------------------------------------
+model Location {
+  id              String       @id @default(cuid())
+  city            String
+  state           String
+  slug            String       @unique
+  zipCodes        String?      // comma separated
+  excerpt         String?
+  description     String?      
+  heroImageId     String?
+  addressLine1    String?
+  phone           String?
+  businessHours   String?
+  latitude        Float?
+  longitude       Float?
+  mapEmbedUrl     String?
+  order           Int          @default(0)
+  isEnabled       Boolean      @default(true)
+
+  seoTitle        String?
+  seoDescription  String?
+  ogImageId       String?
+  isIndexed       Boolean      @default(true)
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  heroImage       Media?       @relation("LocationHero", fields: [heroImageId], references: [id], onDelete: SetNull)
+  ogImage         Media?       @relation("LocationOG",   fields: [ogImageId],   references: [id], onDelete: SetNull)
+
+  services        Service[]    @relation("LocationServices")
+  projects        Project[]
+  reviews         Review[]
+  leads           Lead[]
+  blogPosts       BlogPost[]
+  faqItems        Faq[]
+  offers          Offer[]
+
+  @@index([slug])
+  @@map("locations")
+}
+
+// ---------------------------------------------------------------------------
+// Projects (+ implicit before/after) and gallery images
+// ---------------------------------------------------------------------------
+model Project {
+  id              String       @id @default(cuid())
+  title           String
+  slug            String       @unique
+  serviceId       String?
+  locationId      String?
+  roofType        String?
+  materialsUsed   String?
+  projectDate     DateTime?
+  projectSize     String?
+  description     String?      
+  testimonial     String?
+
+  featuredImageId String?
+  beforeImageId   String?
+  afterImageId    String?
+
+  isFeatured      Boolean      @default(false)
+  isEnabled       Boolean      @default(true)
+  isBeforeAfter   Boolean      @default(false)
+
+  // SEO
+  seoTitle        String?
+  seoDescription  String?
+  isIndexed       Boolean      @default(true)
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  service         Service?     @relation(fields: [serviceId],   references: [id], onDelete: SetNull)
+  location        Location?    @relation(fields: [locationId],  references: [id], onDelete: SetNull)
+
+  featuredImage   Media?       @relation("ProjectFeatured", fields: [featuredImageId], references: [id], onDelete: SetNull)
+  beforeImage     Media?       @relation("ProjectBefore",   fields: [beforeImageId],   references: [id], onDelete: SetNull)
+  afterImage      Media?       @relation("ProjectAfter",    fields: [afterImageId],    references: [id], onDelete: SetNull)
+
+  images          ProjectImage[]
+  blogPosts       BlogPost[]
+
+  @@index([slug])
+  @@map("projects")
+}
+
+model ProjectImage {
+  id          String   @id @default(cuid())
+  projectId   String
+  mediaId     String
+  order       Int      @default(0)
+  caption     String?
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  media       Media    @relation(fields: [mediaId],   references: [id], onDelete: Cascade)
+
+  @@map("project_images")
+}
+
+// ---------------------------------------------------------------------------
+// Reviews
+// ---------------------------------------------------------------------------
+model Review {
+  id            String         @id @default(cuid())
+  customerName  String
+  rating        Int            @default(5)
+  text          String         
+  serviceId     String?
+  locationId    String?
+  source        ReviewSource   @default(WEBSITE)
+  sourceUrl     String?
+  reviewedAt    DateTime       @default(now())
+  photoMediaId  String?
+  isFeatured    Boolean        @default(false)
+  isVerified    Boolean        @default(true)
+  isEnabled     Boolean        @default(true)
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  service       Service?       @relation(fields: [serviceId],    references: [id], onDelete: SetNull)
+  location      Location?      @relation(fields: [locationId],   references: [id], onDelete: SetNull)
+  photo         Media?         @relation("ReviewPhoto", fields: [photoMediaId], references: [id], onDelete: SetNull)
+
+  @@index([serviceId])
+  @@index([locationId])
+  @@map("reviews")
+}
+
+// ---------------------------------------------------------------------------
+// Team
+// ---------------------------------------------------------------------------
+model TeamMember {
+  id            String   @id @default(cuid())
+  name          String
+  position      String
+  bio           String?  
+  photoMediaId  String?
+  certifications String?
+  email         String?
+  phone         String?
+  socialLinks   Json?
+  isFeatured    Boolean  @default(false)
+  order         Int      @default(0)
+  isEnabled     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  photo         Media?   @relation("TeamPhoto", fields: [photoMediaId], references: [id], onDelete: SetNull)
+
+  @@map("team_members")
+}
+
+// ---------------------------------------------------------------------------
+// FAQ
+// ---------------------------------------------------------------------------
+model Faq {
+  id            String   @id @default(cuid())
+  question      String
+  answer        String   
+  category      String   @default("General")
+  serviceId     String?
+  locationId    String?
+  isFeatured    Boolean  @default(false)
+  order         Int      @default(0)
+  isEnabled     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  service       Service?   @relation(fields: [serviceId],   references: [id], onDelete: SetNull)
+  location      Location?  @relation(fields: [locationId],  references: [id], onDelete: SetNull)
+
+  @@index([serviceId])
+  @@index([locationId])
+  @@map("faqs")
+}
+
+// ---------------------------------------------------------------------------
+// Blog: posts, categories, tags
+// ---------------------------------------------------------------------------
+model BlogPost {
+  id              String           @id @default(cuid())
+  title           String
+  slug            String           @unique
+  excerpt         String?
+  content         String           
+  featuredImageId String?
+  authorId        String?
+  categoryId      String?
+  status          PublicationStatus @default(DRAFT)
+  publishedAt     DateTime?
+  scheduledAt     DateTime?
+  readingMinutes  Int              @default(5)
+  isFeatured      Boolean          @default(false)
+
+  seoTitle        String?
+  seoDescription  String?
+  ogImageId       String?
+  isIndexed       Boolean          @default(true)
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  author          User?            @relation(fields: [authorId],     references: [id], onDelete: SetNull)
+  category        BlogCategory?    @relation(fields: [categoryId],   references: [id], onDelete: SetNull)
+  featuredImage   Media?           @relation("PostFeatured", fields: [featuredImageId], references: [id], onDelete: SetNull)
+  ogImage         Media?           @relation("PostOG",       fields: [ogImageId],       references: [id], onDelete: SetNull)
+
+  services        Service[]
+  locations       Location[]
+  projects        Project[]
+
+  @@index([slug])
+  @@map("blog_posts")
+}
+
+model BlogCategory {
+  id        String     @id @default(cuid())
+  name      String
+  slug      String     @unique
+  posts     BlogPost[]
+  @@map("blog_categories")
+}
+
+// ---------------------------------------------------------------------------
+// Offers / specials
+// ---------------------------------------------------------------------------
+model Offer {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?  
+  ctaLabel      String?
+  ctaLink       String?
+  imageId       String?
+  terms         String?
+  startsAt      DateTime?
+  endsAt        DateTime?
+  isFeatured    Boolean  @default(false)
+  isEnabled     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  image         Media?   @relation("OfferImage", fields: [imageId], references: [id], onDelete: SetNull)
+  services      Service[]
+  locations     Location[]
+
+  @@map("offers")
+}
+
+// ---------------------------------------------------------------------------
+// Financing
+// ---------------------------------------------------------------------------
+model FinancingOption {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?  
+  providerName  String?
+  providerUrl   String?
+  details       Json?
+  order         Int      @default(0)
+  isEnabled     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("financing_options")
+}
+
+// ---------------------------------------------------------------------------
+// Forms + dynamic fields (form builder, NOT a page builder)
+// ---------------------------------------------------------------------------
+model Form {
+  id              String       @id @default(cuid())
+  name            String
+  slug            String       @unique
+  description     String?
+  submitLabel     String       @default("Submit")
+  successMessage  String?
+  redirectUrl     String?
+  notifyEmails    String?      // comma separated
+  createLead      Boolean      @default(true)
+  leadSource      LeadSource   @default(FREE_ESTIMATE)
+  spamProtection  Boolean      @default(true)
+  uploadAllowed   Boolean      @default(false)
+  isEnabled       Boolean      @default(true)
+  fields          FormField[]
+  submissions     Lead[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@map("forms")
+}
+
+model FormField {
+  id          String        @id @default(cuid())
+  formId      String
+  name        String        // machine name e.g. "firstName"
+  label       String
+  placeholder String?
+  type        FormFieldType @default(TEXT)
+  helpText    String?
+  required    Boolean       @default(false)
+  order       Int           @default(0)
+  width       String        @default("full") // half | full
+  options     Json?         // string[] for select/radio/checkbox
+  defaultValue String?
+  isEnabled   Boolean       @default(true)
+
+  form        Form          @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
+  @@unique([formId, name])
+  @@map("form_fields")
+}
+
+// ---------------------------------------------------------------------------
+// Leads (CRM) + notes + history
+// ---------------------------------------------------------------------------
+model Lead {
+  id              String       @id @default(cuid())
+  formId          String?
+  firstName       String
+  lastName        String?
+  email           String?
+  phone           String?
+  city            String?
+  zipCode         String?
+  serviceId       String?
+  locationId      String?
+  propertyType    String?
+  roofType        String?
+  message         String?      
+  preferredContact String?
+  appointmentDate DateTime?
+  attachments     Json?
+  source          LeadSource   @default(FREE_ESTIMATE)
+  status          LeadStatus   @default(NEW)
+  assignedToId    String?
+  notes           LeadNote[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  form            Form?        @relation(fields: [formId],       references: [id], onDelete: SetNull)
+  service         Service?     @relation(fields: [serviceId],    references: [id], onDelete: SetNull)
+  location        Location?    @relation(fields: [locationId],   references: [id], onDelete: SetNull)
+  assignedTo      User?        @relation("AssignedLeads", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([serviceId])
+  @@index([locationId])
+  @@index([assignedToId])
+  @@map("leads")
+}
+
+model LeadNote {
+  id          String   @id @default(cuid())
+  leadId      String
+  authorId    String?
+  body        String   
+  isInternal  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  lead        Lead     @relation(fields: [leadId],   references: [id], onDelete: Cascade)
+  author      User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([leadId])
+  @@map("lead_notes")
+}
+
+// ---------------------------------------------------------------------------
+// Media library
+// ---------------------------------------------------------------------------
+model Media {
+  id            String    @id @default(cuid())
+  filename      String
+  originalName  String
+  mimeType      String
+  size          Int
+  type          MediaType @default(IMAGE)
+  url           String    // public path or remote URL
+  altText       String?
+  title         String?
+  caption       String?
+  folder        String    @default("root")
+  width         Int?
+  height        Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  companyLogo       CompanySetting?  @relation("CompanyLogo")
+  companyFavicon    CompanySetting?  @relation("CompanyFavicon")
+  serviceHero       Service[]        @relation("ServiceHero")
+  serviceOG         Service[]        @relation("ServiceOG")
+  locationHero      Location[]       @relation("LocationHero")
+  locationOG        Location[]       @relation("LocationOG")
+  projectFeatured   Project[]        @relation("ProjectFeatured")
+  projectBefore     Project[]        @relation("ProjectBefore")
+  projectAfter      Project[]        @relation("ProjectAfter")
+  projectImages     ProjectImage[]
+  reviewPhoto       Review[]         @relation("ReviewPhoto")
+  teamPhoto         TeamMember[]     @relation("TeamPhoto")
+  postFeatured      BlogPost[]       @relation("PostFeatured")
+  postOG            BlogPost[]       @relation("PostOG")
+  pageHero          Page[]           @relation("PageHero")
+  seoOg             SeoMetadata[]    @relation("SeoOG")
+  offerImage        Offer[]          @relation("OfferImage")
+
+  @@index([url])
+  @@map("media")
+}
+
+// ---------------------------------------------------------------------------
+// Menus (header / footer / mobile), ordered items
+// ---------------------------------------------------------------------------
+model Menu {
+  id        String       @id @default(cuid())
+  name      String
+  slug      String       @unique // header | footer | mobile
+  items     MenuItem[]
+  @@map("menus")
+}
+
+model MenuItem {
+  id        String   @id @default(cuid())
+  menuId    String
+  label     String
+  url       String
+  parentId  String?
+  order     Int      @default(0)
+  isEnabled Boolean  @default(true)
+  isCTA     Boolean  @default(false)
+
+  menu      Menu     @relation(fields: [menuId],   references: [id], onDelete: Cascade)
+  parent    MenuItem? @relation("MenuItemParent", fields: [parentId], references: [id])
+  children  MenuItem[] @relation("MenuItemParent")
+
+  @@index([menuId])
+  @@map("menu_items")
+}
+
+// ---------------------------------------------------------------------------
+// Pages (for static content pages) + SEO metadata
+// ---------------------------------------------------------------------------
+model Page {
+  id              String           @id @default(cuid())
+  title           String
+  slug            String           @unique
+  template        String           @default("default") // predefined templates only
+  excerpt         String?
+  content         String?          
+  heroImageId     String?
+  status          PublicationStatus @default(PUBLISHED)
+  publishedAt     DateTime?
+  isIndexed       Boolean          @default(true)
+  seo             SeoMetadata?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  heroImage       Media?           @relation("PageHero", fields: [heroImageId], references: [id], onDelete: SetNull)
+
+  @@map("pages")
+}
+
+model SeoMetadata {
+  id              String   @id @default(cuid())
+  pageId          String?  @unique
+  entityType      String?  // service | location | project | blog | page
+  entityId        String?
+  title           String?
+  description     String?
+  canonicalUrl    String?
+  keywords        String?
+  ogTitle         String?
+  ogDescription   String?
+  ogImageId       String?
+  noindex         Boolean  @default(false)
+  nofollow        Boolean  @default(false)
+  jsonLd          Json?
+  updatedAt       DateTime @updatedAt
+
+  page            Page?    @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  ogImage         Media?   @relation("SeoOG", fields: [ogImageId], references: [id], onDelete: SetNull)
+
+  @@map("seo_metadata")
+}
+
+// ---------------------------------------------------------------------------
+// Redirects
+// ---------------------------------------------------------------------------
+model Redirect {
+  id          String        @id @default(cuid())
+  fromUrl     String        @unique
+  toUrl       String
+  type        RedirectType  @default(PERMANENT)
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("redirects")
+}
+
+// ---------------------------------------------------------------------------
+// Activity log (audit trail)
+// ---------------------------------------------------------------------------
+model ActivityLog {
+  id          String          @id @default(cuid())
+  userId      String?
+  action      ActivityAction
+  entity      String?
+  entityId    String?
+  summary     String?
+  ipAddress   String?
+  createdAt   DateTime        @default(now())
+
+  user        User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("activity_logs")
+}

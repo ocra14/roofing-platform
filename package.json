@@ -1,0 +1,52 @@
+{
+  "name": "roofing-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reusable roofing company website + CMS platform (Next.js full-stack)",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev --name init",
+    "db:reset": "prisma migrate reset --force",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:setup": "prisma generate && prisma migrate dev --name init && npm run db:seed",
+    "db:use-postgres": "node scripts/use-postgres.mjs",
+    "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.7.4",
+    "@hookform/resolvers": "^3.9.1",
+    "@prisma/client": "^6.2.1",
+    "bcryptjs": "^2.4.3",
+    "clsx": "^2.1.1",
+    "next": "^15.1.4",
+    "next-auth": "^5.0.0-beta.25",
+    "prisma": "^6.19.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
+    "tailwind-merge": "^2.6.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.4",
+    "@types/react-dom": "^19.0.2",
+    "eslint": "^9.18.0",
+    "eslint-config-next": "^15.1.4",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
