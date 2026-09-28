@@ -50,7 +50,36 @@ export async function saveBlogPost(formData: FormData) {
   const categoryId = String(formData.get("categoryId") || "").trim() || null;
   if (!title || !slug || !content) throw new Error("Title, slug, and content are required");
 
-  const data = { title, slug, excerpt, content, status, categoryId, authorId: session?.user?.id || null, publishedAt: status === "PUBLISHED" ? new Date() : null };
+  // Resolve an optional featured-image URL (dropzone upload or pasted URL)
+  // to its Media row, mirroring the generic CRUD image handling.
+  let featuredImageId: string | null | undefined;
+  const featuredImageUrl = String(formData.get("featuredImageUrl") || "").trim();
+  if (formData.has("featuredImageUrl")) {
+    if (!featuredImageUrl) {
+      featuredImageId = null;
+    } else {
+      const existing = await prisma.media.findFirst({ where: { url: featuredImageUrl }, select: { id: true } });
+      if (existing) {
+        featuredImageId = existing.id;
+      } else {
+        const created = await prisma.media.create({
+          data: {
+            filename: featuredImageUrl.split("/").pop() || "external",
+            originalName: featuredImageUrl.split("/").pop() || "external",
+            mimeType: "image/external",
+            size: 0,
+            type: "IMAGE",
+            url: featuredImageUrl,
+            altText: title.slice(0, 200),
+            folder: "external",
+          } as unknown as never,
+        });
+        featuredImageId = created.id;
+      }
+    }
+  }
+
+  const data = { title, slug, excerpt, content, status, categoryId, authorId: session?.user?.id || null, publishedAt: status === "PUBLISHED" ? new Date() : null, ...(featuredImageId !== undefined ? { featuredImageId } : {}) };
   if (isNew) {
     const post = await prisma.blogPost.create({ data });
     await logActivity({ userId: session?.user?.id, action: "CREATE", entity: "BlogPost", entityId: post.id, summary: `Created post ${title}` });

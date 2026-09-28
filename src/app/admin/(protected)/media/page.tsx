@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { AdminPageHeader, AdminCard } from "@/components/admin/ui";
+import { MediaDropzone } from "@/components/admin/media-dropzone";
 import { Icon } from "@/components/ui/icon";
 import { uploadMedia, deleteMedia } from "@/lib/actions/content";
 import { formatDate } from "@/lib/utils";
@@ -20,8 +21,11 @@ export default async function MediaPage({ searchParams }: { searchParams: SP }) 
 
   return (
     <div>
-      <AdminPageHeader title="Media Library" description={`${total} files. Paste an image URL or upload path; files are optimized automatically when possible.`} />
-      <AdminCard title="Add Media">
+      <AdminPageHeader title="Media Library" description={`${total} files. Drop images to upload them, or paste an image URL — files are optimized automatically when possible.`} />
+      <AdminCard title="Upload Images">
+        <MediaDropzone />
+      </AdminCard>
+      <AdminCard title="Add Media by URL" className="mt-6">
         <form action={uploadMedia} className="grid gap-4 sm:grid-cols-3">
           <div className="sm:col-span-2"><label className="field-label">Image URL or Path</label><input name="url" required placeholder="https://... or /uploads/photo.jpg" className="field-input" /></div>
           <div><label className="field-label">Folder</label><input name="folder" defaultValue="root" className="field-input" /></div>

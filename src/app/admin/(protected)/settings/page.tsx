@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCompanySettings } from "@/lib/cms";
 import { AdminPageHeader, AdminCard } from "@/components/admin/ui";
+import { ImageField } from "@/components/admin/image-field";
 import { Icon } from "@/components/ui/icon";
 import { saveCompanySettings, toggleDemoMode } from "@/lib/actions/settings";
 
@@ -29,8 +30,24 @@ export default async function AdminSettingsPage() {
             <SettingsField name="name" label="Company Name" defaultValue={company.name} required />
             <SettingsField name="tagline" label="Tagline" defaultValue={company.tagline ?? ""} placeholder="Dallas-Fort Worth Roofing Experts" />
             <SettingsField name="legalName" label="Legal Entity Name" defaultValue={company.legalName ?? ""} />
-            <SettingsField name="logoUrl" label="Logo Image URL" defaultValue={company.logo?.url ?? ""} helpText="Upload via the Media Library, then paste the URL here." />
-            <SettingsField name="faviconUrl" label="Favicon URL" defaultValue={company.favicon?.url ?? ""} />
+            <div className="sm:col-span-2">
+              <ImageField
+                name="logoUrl"
+                label="Logo Image"
+                defaultValue={company.logo?.url ?? ""}
+                helpText="Drop your logo here, or paste an image URL. Shown in the header and footer."
+                folder="branding"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <ImageField
+                name="faviconUrl"
+                label="Favicon"
+                defaultValue={company.favicon?.url ?? ""}
+                helpText="Small icon shown in browser tabs. Square PNG works best."
+                folder="branding"
+              />
+            </div>
             <SettingsField name="websiteUrl" label="Website URL" defaultValue={company.websiteUrl ?? ""} />
             <div className="sm:col-span-2">
               <label className="field-label">Company Description</label>

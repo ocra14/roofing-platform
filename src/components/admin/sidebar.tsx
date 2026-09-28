@@ -44,7 +44,6 @@ const GROUPS: NavGroup[] = [
       { label: "FAQs", href: "/admin/faqs/", icon: "alert", roles: ["SUPER_ADMIN", "ADMINISTRATOR", "EDITOR"] },
       { label: "Blog", href: "/admin/blog/", icon: "edit", roles: ["SUPER_ADMIN", "ADMINISTRATOR", "EDITOR", "MARKETING"] },
       { label: "Offers", href: "/admin/offers/", icon: "badge", roles: ["SUPER_ADMIN", "ADMINISTRATOR", "MARKETING"] },
-      { label: "Financing", href: "/admin/financing/", icon: "badge", roles: ["SUPER_ADMIN", "ADMINISTRATOR"] },
     ],
   },
   {

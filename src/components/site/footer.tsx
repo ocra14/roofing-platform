@@ -214,8 +214,8 @@ export async function Footer() {
               </li>
             ))}
             <li>
-              <Link href="/admin/" className="transition-colors hover:text-white">
-                Admin
+              <Link href="/admin-dashboard/" className="transition-colors hover:text-white">
+                Website Platform
               </Link>
             </li>
           </ul>

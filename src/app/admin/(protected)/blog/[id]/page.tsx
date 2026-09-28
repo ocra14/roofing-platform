@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ImageField } from "@/components/admin/image-field";
 import { Icon } from "@/components/ui/icon";
 import { saveBlogPost, deleteBlogPost } from "@/lib/actions/content";
 import { notFound } from "next/navigation";
@@ -10,7 +11,7 @@ type Params = Promise<{ id: string }>;
 export default async function BlogEditPage({ params }: { params: Params }) {
   const { id } = await params;
   const [post, categories] = await Promise.all([
-    prisma.blogPost.findUnique({ where: { id } }),
+    prisma.blogPost.findUnique({ where: { id }, include: { featuredImage: { select: { url: true } } } }),
     prisma.blogCategory.findMany({ orderBy: { name: "asc" } }),
   ]);
   if (!post) notFound();
@@ -34,6 +35,15 @@ export default async function BlogEditPage({ params }: { params: Params }) {
             <select name="status" defaultValue={post.status} className="field-select"><option value="DRAFT">Draft</option><option value="PUBLISHED">Published</option><option value="SCHEDULED">Scheduled</option></select>
           </div>
           <div className="sm:col-span-2"><label className="field-label">Excerpt</label><input name="excerpt" defaultValue={post.excerpt || ""} className="field-input" /></div>
+          <div className="sm:col-span-2">
+            <ImageField
+              name="featuredImageUrl"
+              label="Featured Image"
+              defaultValue={post.featuredImage?.url || ""}
+              helpText="Drop a cover image here, or paste an image URL. Shown on the blog list and article page."
+              folder="blog"
+            />
+          </div>
           <div className="sm:col-span-2"><label className="field-label">Content</label><textarea name="content" rows={12} defaultValue={post.content} required className="field-textarea font-mono text-sm" /></div>
           <div><label className="field-label">SEO Title</label><input name="seoTitle" defaultValue={post.seoTitle || ""} className="field-input" /></div>
           <div><label className="field-label">SEO Description</label><input name="seoDescription" defaultValue={post.seoDescription || ""} className="field-input" /></div>

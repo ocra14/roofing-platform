@@ -1,21 +1,18 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Hero } from "@/components/site/hero";
 import { TrustBar } from "@/components/site/trust-bar";
 import { ServicesGrid } from "@/components/site/services-grid";
 import { WhyChooseUs } from "@/components/site/why-choose-us";
 import { ProjectsGrid } from "@/components/site/project-card";
-import { BeforeAfterSection } from "@/components/site/before-after-section";
 import { ProcessSteps } from "@/components/site/process-steps";
-import { MaterialsGrid } from "@/components/site/materials-grid";
 import { StormEmergency } from "@/components/site/storm-emergency";
-import { FinancingBanner } from "@/components/site/financing-banner";
 import { ReviewsPreview } from "@/components/site/reviews-preview";
 import { ServiceAreasSection } from "@/components/site/service-areas-section";
-import { AboutPreview } from "@/components/site/about-preview";
 import { FaqAccordion } from "@/components/site/faq-accordion";
 import { BlogList } from "@/components/site/blog-list";
 import { CtaSection } from "@/components/site/cta-section";
-import { Certifications } from "@/components/site/certifications";
+import { Icon } from "@/components/ui/icon";
 import { buildMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 
@@ -38,7 +35,7 @@ export default async function HomePage() {
     prisma.faq.findMany({
       where: { isEnabled: true, isFeatured: true },
       orderBy: [{ order: "asc" }],
-      take: 8,
+      take: 6,
       select: { id: true, question: true, answer: true },
     }),
     prisma.blogPost.findMany({
@@ -56,11 +53,15 @@ export default async function HomePage() {
   return (
     <>
       {/* 1-2: Announcement bar + Header are rendered by the site layout */}
+      {/* What do you do? */}
       <Hero />
       <TrustBar />
-      <Certifications />
       <ServicesGrid />
+
+      {/* Why trust you? (merged: difference + local proof) */}
       <WhyChooseUs />
+
+      {/* Show me proof */}
       {featuredProjects.length ? (
         <section className="section" id="featured-projects">
           <div className="container-page">
@@ -69,21 +70,33 @@ export default async function HomePage() {
               <h2 className="mt-3">Featured Roofing Projects</h2>
               <p className="lead mt-4">
                 Real projects from local homes and businesses, completed by our crews and documented
-                from start to finish.
+                from start to finish — including before &amp; after transformations.
               </p>
             </div>
             <ProjectsGrid projects={featuredProjects} />
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link href="/projects/" className="btn btn-outline">
+                View All Projects
+                <Icon name="arrow-right" size={16} />
+              </Link>
+              <Link href="/free-estimate/" className="btn btn-primary">
+                Get a Free Estimate
+                <Icon name="send" size={16} />
+              </Link>
+            </div>
           </div>
         </section>
       ) : null}
-      <BeforeAfterSection />
-      <ProcessSteps />
-      <MaterialsGrid />
-      <StormEmergency />
-      <FinancingBanner />
       <ReviewsPreview />
+
+      {/* Where do you operate? */}
       <ServiceAreasSection />
-      <AboutPreview />
+
+      {/* How does it work? */}
+      <ProcessSteps />
+
+      {/* What if I have an emergency? */}
+      <StormEmergency />
 
       {faqs.length ? (
         <section className="section bg-surface" id="faq">

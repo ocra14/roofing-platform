@@ -5,6 +5,7 @@ import { BackToEntityList } from "@/components/admin/entity-list";
 import { DeleteRecordButton } from "@/components/admin/delete-button";
 import { deleteRecord } from "@/lib/actions/crud";
 import { AdminCard } from "@/components/admin/ui";
+import { ImageField } from "@/components/admin/image-field";
 import { Icon } from "@/components/ui/icon";
 import { formatDate } from "@/lib/utils";
 
@@ -31,6 +32,36 @@ export async function EntityEditor({
     }>)[def.model];
     record = await delegate.findUnique({ where: { id } });
     if (!record) throw new Error(`${def.label} not found`);
+
+    // Image fields edit a friendly URL but the DB stores a Media relation ID.
+    // Resolve IDs → URLs so the current image is visible in the editor.
+    const urlToColumn: Record<string, string> = {
+      beforeImageUrl: "beforeImageId",
+      afterImageUrl: "afterImageId",
+      featuredImageUrl: "featuredImageId",
+      imageUrl: "imageId",
+      photoUrl: "photoMediaId",
+    };
+    const wanted = def.fields
+      .map((f) => f.name)
+      .filter((name) => urlToColumn[name]);
+    const ids = wanted
+      .map((name) => record?.[urlToColumn[name]])
+      .filter((v): v is string => typeof v === "string" && v.length > 0);
+    if (ids.length) {
+      const media = await prisma.media.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, url: true },
+      });
+      const byId = new Map(media.map((m) => [m.id, m.url]));
+      for (const name of wanted) {
+        const relId = record?.[urlToColumn[name]];
+        record[name] =
+          typeof relId === "string" ? byId.get(relId) ?? "" : "";
+      }
+    } else {
+      for (const name of wanted) record[name] = "";
+    }
   }
 
   const action = saveRecord.bind(null, entity, isNew ? null : id);
@@ -119,6 +150,25 @@ function FieldInput({ field, value }: { field: FieldDef; value: unknown }) {
   const wrapperClass = field.type === "checkbox" ? "flex items-center gap-3 pt-1" : "";
   const spanClass = field.half && field.type !== "checkbox" ? "sm:col-span-1" : "sm:col-span-2";
   const isWide = !field.half || field.type === "list" || field.type === "pipeList" || field.type === "textarea";
+  const isImageField =
+    field.type === "text" && /(image|photo|logo|favicon)/i.test(field.name);
+
+  // Image URL fields get drag-and-drop upload + URL paste in one control.
+  if (isImageField) {
+    return (
+      <div className="sm:col-span-2">
+        <ImageField
+          name={field.name}
+          label={field.label}
+          defaultValue={stringValue}
+          placeholder={field.placeholder || "https://… or /uploads/photo.jpg"}
+          helpText={field.helpText}
+          required={field.required}
+          folder={field.name.replace(/url$/i, "").toLowerCase() || "root"}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={`${wrapperClass} ${isWide ? "sm:col-span-2" : spanClass}`}>

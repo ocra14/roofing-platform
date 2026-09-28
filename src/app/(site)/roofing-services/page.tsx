@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { PageHero } from "@/components/site/page-hero";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { Img } from "@/components/ui/img";
+import { serviceImage } from "@/lib/images";
 import { ProcessSteps } from "@/components/site/process-steps";
 import { CtaSection } from "@/components/site/cta-section";
 import { buildMetadata } from "@/lib/seo";
@@ -42,17 +44,35 @@ export default async function ServicesPage() {
         <div className="container-page">
           <div className="grid gap-6 md:grid-cols-2">
             {services.map((s) => (
-              <a key={s.id} href={`/${s.slug}/`} className="card card-hover group flex gap-5 p-7">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/8 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
-                  <Icon name={(s.icon as IconName) || "home"} size={22} />
-                </span>
-                <div>
-                  <h2 className="text-lg">{s.name}</h2>
-                  {s.excerpt ? <p className="mt-2 text-sm leading-relaxed text-muted">{s.excerpt}</p> : null}
-                  <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
-                    Learn more
-                    <Icon name="arrow-right" size={15} className="transition-transform group-hover:translate-x-1" />
+              <a
+                key={s.id}
+                href={`/${s.slug}/`}
+                className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/15 hover:shadow-[0_12px_32px_-12px_rgba(15,39,69,0.18)]"
+              >
+                <div className="relative aspect-[16/8] overflow-hidden bg-canvas">
+                  <Img
+                    src={serviceImage(s.slug)}
+                    alt={`${s.name} — roofing work`}
+                    width={800}
+                    height={400}
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                    fallbackLabel={s.name}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/45 via-primary/5 to-transparent" />
+                </div>
+                <div className="flex flex-1 gap-5 p-7">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/8 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+                    <Icon name={(s.icon as IconName) || "home"} size={22} />
                   </span>
+                  <div>
+                    <h2 className="text-lg">{s.name}</h2>
+                    {s.excerpt ? <p className="mt-2 text-sm leading-relaxed text-muted">{s.excerpt}</p> : null}
+                    <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
+                      Learn more
+                      <Icon name="arrow-right" size={15} className="transition-transform group-hover:translate-x-1" />
+                    </span>
+                  </div>
                 </div>
               </a>
             ))}

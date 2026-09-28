@@ -19,7 +19,7 @@ export async function StormEmergency() {
             <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/8 text-primary">
               <Icon name="bolt" size={24} />
             </span>
-            <h2 className="mt-5">Storm Damage Specialists</h2>
+            <h2 className="mt-5">Storm Damage? Don&apos;t Wait.</h2>
             <p className="lead mt-4">
               Hail and high winds can damage a roof in ways that are invisible from the ground. We
               document the damage with photos, meet your adjuster on site, and restore your roof to
@@ -35,30 +35,45 @@ export async function StormEmergency() {
                 )
               )}
             </ul>
-            <div className="mt-7">
-              <Link href="/storm-damage-roofing/" className="btn btn-primary">
-                Storm Damage Resources
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Link href="/free-estimate/" className="btn btn-primary">
+                Get an Emergency Inspection
                 <Icon name="arrow-right" size={16} />
+              </Link>
+              <Link href="/storm-damage-roofing/" className="btn btn-outline">
+                Storm Damage Resources
               </Link>
             </div>
           </div>
 
-          {/* Emergency */}
-          <div className="flex flex-col justify-between gap-8 bg-primary p-8 text-white md:p-10">
-            <div>
-              <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/12 text-white">
-                <Icon name="siren" size={24} />
+          {/* Emergency — high-contrast urgency panel */}
+          <div className="relative flex flex-col justify-between gap-8 overflow-hidden bg-primary p-8 text-white md:p-10">
+            <div
+              className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-red-500 via-accent to-red-500"
+              aria-hidden="true"
+            />
+            <div
+              className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-red-500/15 blur-3xl"
+              aria-hidden="true"
+            />
+            <div className="relative">
+              <span className="inline-flex items-center gap-2 rounded-full border border-red-400/40 bg-red-500/15 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-red-200">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-red-400" />
+                </span>
+                Rapid Response
               </span>
               <h2 className="mt-5 text-white">Emergency Roofing</h2>
               <p className="mt-4 max-w-md text-base leading-relaxed text-white/75">
-                Active leak? Don't wait for it to spread. We prioritize emergency calls to stop water
+                Active leak? Don&apos;t wait for it to spread. We prioritize emergency calls to stop water
                 intrusion before it causes structural damage.
               </p>
             </div>
 
-            <div>
+            <div className="relative">
               {company.emergencyAvailable ? (
-                <div className="rounded-xl bg-white/10 p-5">
+                <div className="rounded-xl border border-white/15 bg-white/10 p-5">
                   <div className="flex items-center gap-2 text-sm font-medium text-white/80">
                     <Icon name="clock" size={16} className="text-accent" />
                     {company.emergencyHoursLabel || "Emergency service available"}
@@ -74,7 +89,7 @@ export async function StormEmergency() {
                   ) : null}
                 </div>
               ) : (
-                <div className="rounded-xl bg-white/10 p-5 text-sm text-white/70">
+                <div className="rounded-xl border border-white/15 bg-white/10 p-5 text-sm text-white/70">
                   Emergency availability is currently not enabled for this location. Please call our
                   main line and we will respond as quickly as we can.
                 </div>

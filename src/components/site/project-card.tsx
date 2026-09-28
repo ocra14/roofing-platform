@@ -15,13 +15,26 @@ export type ProjectWithRelations = {
   description?: string | null;
   projectDate?: Date | string | null;
   projectSize?: string | null;
+  roofType?: string | null;
+  materialsUsed?: string | null;
   isBeforeAfter?: boolean;
   service: { name: string } | null;
   location: { city: string; state?: string | null } | null;
   featuredImage?: { url: string } | null;
 };
 
+function monthYear(date: Date | string | null | undefined): string {
+  if (!date) return "";
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
 export function ProjectCard({ project }: { project: ProjectWithRelations }) {
+  const locationLine = project.location
+    ? `${project.location.city}${project.location.state ? `, ${project.location.state}` : ""}`
+    : null;
+
   return (
     <Link
       href={`/projects/${project.slug}/`}
@@ -35,7 +48,7 @@ export function ProjectCard({ project }: { project: ProjectWithRelations }) {
           height={450}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          fallbackLabel={project.service?.name || "Roofing project"}
+          fallbackLabel={project.service?.name || "Roof replacement in progress"}
           fallbackTone="stone"
         />
         {project.isBeforeAfter ? (
@@ -47,16 +60,26 @@ export function ProjectCard({ project }: { project: ProjectWithRelations }) {
       <div className="flex flex-1 flex-col p-5">
         <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted">
           {project.service ? <span>{project.service.name}</span> : null}
-          {project.service && project.location ? <span className="text-line">/</span> : null}
-          {project.location ? <span>{project.location.city}</span> : null}
+          {project.service && locationLine ? <span className="text-line">/</span> : null}
+          {locationLine ? <span>{locationLine}</span> : null}
         </div>
         <h3 className="mt-2 text-base leading-snug">{project.title}</h3>
+        {(project.materialsUsed || project.roofType) && (
+          <p className="mt-1.5 text-[13px] font-medium text-ink/70">
+            {[project.roofType, project.materialsUsed].filter(Boolean).join(" · ")}
+          </p>
+        )}
         {project.description ? (
           <p className="mt-2 flex-1 line-clamp-2 text-sm text-muted">{project.description}</p>
-        ) : null}
+        ) : (
+          <span className="flex-1" />
+        )}
         <div className="mt-4 flex items-center justify-between border-t border-line pt-3.5">
           <span className="text-xs text-muted">
-            {project.projectDate ? formatDate(project.projectDate) : project.projectSize || "—"}
+            {project.projectDate
+              ? `Completed ${monthYear(project.projectDate) || formatDate(project.projectDate)}`
+              : project.projectSize || "—"}
+            {project.projectDate && project.projectSize ? ` · ${project.projectSize}` : ""}
           </span>
           <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
             View

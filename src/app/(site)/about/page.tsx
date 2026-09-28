@@ -4,6 +4,7 @@ import { PageHero } from "@/components/site/page-hero";
 import { Certifications } from "@/components/site/certifications";
 import { CtaSection } from "@/components/site/cta-section";
 import { ServiceAreasSection } from "@/components/site/service-areas-section";
+import { Img } from "@/components/ui/img";
 import { Icon } from "@/components/ui/icon";
 import { buildMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
@@ -23,6 +24,7 @@ export default async function AboutPage() {
     prisma.teamMember.findMany({
       where: { isEnabled: true },
       orderBy: [{ order: "asc" }, { name: "asc" }],
+      include: { photo: { select: { url: true } } },
     }),
   ]);
 
@@ -97,13 +99,25 @@ export default async function AboutPage() {
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {team.map((member) => (
                 <div key={member.id} className="card p-6 text-center">
-                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 font-display text-2xl font-bold text-primary">
-                    {member.name
-                      .split(" ")
-                      .map((n) => n.charAt(0))
-                      .join("")
-                      .slice(0, 2)}
-                  </div>
+                  {member.photo?.url ? (
+                    <Img
+                      src={member.photo.url}
+                      alt={`${member.name} — ${member.position}`}
+                      width={160}
+                      height={160}
+                      sizes="160px"
+                      className="mx-auto h-20 w-20 rounded-full border border-line object-cover"
+                      fallbackLabel={member.name}
+                    />
+                  ) : (
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 font-display text-2xl font-bold text-primary">
+                      {member.name
+                        .split(" ")
+                        .map((n) => n.charAt(0))
+                        .join("")
+                        .slice(0, 2)}
+                    </div>
+                  )}
                   <h3 className="mt-4 text-base">{member.name}</h3>
                   <p className="mt-1 text-sm font-medium text-secondary">{member.position}</p>
                   {member.bio ? (

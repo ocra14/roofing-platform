@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { AdminPageHeader, AdminCard } from "@/components/admin/ui";
+import { ImageField } from "@/components/admin/image-field";
 import { Icon } from "@/components/ui/icon";
 import { saveBlogPost, deleteBlogPost } from "@/lib/actions/content";
 import { formatDate } from "@/lib/utils";
@@ -37,6 +38,14 @@ export default async function BlogAdminPage({ searchParams }: { searchParams: SP
               <select name="status" className="field-select"><option value="DRAFT">Draft</option><option value="PUBLISHED">Published</option><option value="SCHEDULED">Scheduled</option></select>
             </div>
             <div className="sm:col-span-2"><label className="field-label">Excerpt</label><input name="excerpt" className="field-input" /></div>
+            <div className="sm:col-span-2">
+              <ImageField
+                name="featuredImageUrl"
+                label="Featured Image"
+                helpText="Drop a cover image here, or paste an image URL."
+                folder="blog"
+              />
+            </div>
             <div className="sm:col-span-2"><label className="field-label">Content (Markdown)</label><textarea name="content" rows={8} required className="field-textarea font-mono text-sm" placeholder="## Heading&#10;Paragraph..." /></div>
           </div>
           <div className="flex justify-end"><button type="submit" className="btn btn-primary"><Icon name="plus" size={16} />Create Post</button></div>

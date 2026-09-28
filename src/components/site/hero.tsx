@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getCompanySettings } from "@/lib/cms";
-import { Icon } from "@/components/ui/icon";
+import { Icon, type IconName } from "@/components/ui/icon";
 import { Stars } from "@/components/ui/stars";
 import { Img } from "@/components/ui/img";
 import { ROOF_IMAGES } from "@/lib/images";
@@ -13,6 +13,16 @@ export async function Hero() {
     { value: company.yearsInBusiness ? `${company.yearsInBusiness}+` : null, label: "Years in Business" },
     { value: company.roofsCompleted ? `${company.roofsCompleted.toLocaleString()}+` : null, label: "Roofs Completed" },
   ].filter((s) => s.value);
+
+  // Trust points are CMS-driven and only rendered when truthful:
+  // - Free Inspections: the free-estimate form is the site's primary CTA
+  // - Licensed & Insured: only when a license number is entered in settings
+  const trust: { icon: IconName; label: string }[] = [
+    { icon: "send", label: "Free Inspections" },
+    ...(company.licenseNumber
+      ? [{ icon: "shield" as const, label: "Licensed & Insured" }]
+      : []),
+  ];
 
   return (
     <section className="relative overflow-hidden bg-primary text-white">
@@ -66,9 +76,7 @@ export async function Hero() {
           </h1>
 
           <p className="mt-6 max-w-[480px] text-[16px] leading-[1.7] text-white/70 lg:text-[17px]">
-            {company.description
-              ? company.description.slice(0, 160) + (company.description.length > 160 ? "…" : "")
-              : "Professional roof repair, roof replacement, storm damage restoration, and commercial roofing for homeowners and businesses across the region."}
+            Professional Roof Repair, Replacement &amp; Storm Damage Solutions — Backed by Local Expertise.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -76,7 +84,7 @@ export async function Hero() {
               href="/free-estimate/"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-accent px-7 py-3.5 text-[14px] font-bold tracking-[-0.01em] text-white shadow-[0_4px_20px_rgba(217,119,6,0.4)] transition-all hover:bg-accent/90 hover:shadow-[0_6px_28px_rgba(217,119,6,0.5)] hover:-translate-y-0.5 active:translate-y-0"
             >
-              Get Your Free Roof Inspection
+              Get a Free Estimate
               <Icon name="arrow-right" size={15} />
             </Link>
             {company.phone ? (
@@ -85,46 +93,39 @@ export async function Hero() {
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 bg-white/10 px-7 py-3.5 text-[14px] font-semibold text-white backdrop-blur transition-colors hover:bg-white/15"
               >
                 <Icon name="phone" size={15} />
-                {formatPhone(company.phone)}
+                Call Now: {formatPhone(company.phone)}
               </a>
             ) : null}
           </div>
 
-          <div className="mt-10 flex flex-wrap items-center gap-6 border-t border-white/10 pt-7">
-            <span className="inline-flex items-center gap-2 text-[12.5px] font-semibold tracking-[-0.01em] text-white/80">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/12">
-                <Icon name="shield" size={12} className="text-accent" />
-              </span>
-              Licensed & Insured
-            </span>
-            <span className="inline-flex items-center gap-2 text-[12.5px] font-semibold tracking-[-0.01em] text-white/80">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/12">
-                <Icon name="badge" size={12} className="text-accent" />
-              </span>
-              Manufacturer Certified
-            </span>
-            {company.yearsInBusiness > 0 ? (
-              <span className="inline-flex items-center gap-2 text-[12.5px] font-semibold tracking-[-0.01em] text-white/80">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/12">
-                  <Icon name="clock" size={12} className="text-accent" />
+          {trust.length ? (
+            <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/10 pt-7">
+              {trust.map((t) => (
+                <span
+                  key={t.label}
+                  className="inline-flex items-center gap-2 text-[12.5px] font-semibold tracking-[-0.01em] text-white/80"
+                >
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/12">
+                    <Icon name={t.icon} size={12} className="text-accent" />
+                  </span>
+                  {t.label}
                 </span>
-                {company.yearsInBusiness}+ Years
-              </span>
-            ) : null}
-          </div>
+              ))}
+            </div>
+          ) : null}
         </div>
 
-        {/* Visual */}
+        {/* Visual — roofing crew at work */}
         <div className="relative lg:pl-4">
           <div className="relative overflow-hidden rounded-[20px] shadow-[0_20px_60px_-16px_rgba(0,0,0,0.5)] ring-1 ring-white/15">
             <Img
               src={ROOF_IMAGES.hero}
-              alt={`${company.name} roofing project`}
+              alt={`Roofing crew installing shingles for ${company.name}`}
               width={800}
               height={620}
               sizes="(max-width: 1024px) 100vw, 50vw"
               className="aspect-[4/3.15] w-full object-cover"
-              fallbackLabel="Completed roofing project"
+              fallbackLabel="Roof replacement in progress"
               fallbackTone="blue"
               priority
             />

@@ -2,18 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Img } from "@/components/ui/img";
-import { ROOF_IMAGES } from "@/lib/images";
-
-const SERVICE_IMAGES: Record<string, string> = {
-  "roof-repair": ROOF_IMAGES.services.repair,
-  "roof-replacement": ROOF_IMAGES.services.replacement,
-  "roofing-inspection": ROOF_IMAGES.services.inspection,
-  "storm-damage-roofing": ROOF_IMAGES.services.storm,
-  "emergency-roofing": ROOF_IMAGES.services.emergency,
-  "commercial-roofing": ROOF_IMAGES.services.commercial,
-  "roof-maintenance": ROOF_IMAGES.services.maintenance,
-  gutters: ROOF_IMAGES.services.gutters,
-};
+import { serviceImage } from "@/lib/images";
 
 export async function ServicesGrid({
   limit,
@@ -46,7 +35,7 @@ export async function ServicesGrid({
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {services.map((service) => {
-            const image = SERVICE_IMAGES[service.slug] || ROOF_IMAGES.projects[0];
+            const image = serviceImage(service.slug);
             return (
               <Link
                 key={service.id}

@@ -17,7 +17,7 @@ export async function ServiceAreasSection({ limit = 12 }: { limit?: number }) {
       <div className="container-page">
         <div className="mb-12 max-w-2xl">
           <span className="eyebrow">Service Areas</span>
-          <h2 className="mt-3">Roofing Across the Metroplex</h2>
+          <h2 className="mt-3">Roofing Across Our Service Areas</h2>
           <p className="lead mt-4">
             Locally based crews serving homeowners and businesses throughout the region. Select your
             city for local information and recent projects.
@@ -30,11 +30,15 @@ export async function ServiceAreasSection({ limit = 12 }: { limit?: number }) {
               key={l.id}
               href={`/service-areas/${l.slug}/`}
               className="card card-hover group flex items-center justify-between gap-4 p-5"
+              aria-label={`Roofing in ${l.city}, ${l.state}`}
             >
               <span>
                 <span className="flex items-center gap-2 text-base font-semibold text-ink">
                   <Icon name="map-pin" size={17} className="text-accent" />
-                  {l.city}, {l.state}
+                  Roofing in {l.city}
+                </span>
+                <span className="mt-1 block text-xs font-medium uppercase tracking-wide text-muted">
+                  {l.state}
                 </span>
                 {l.excerpt ? (
                   <span className="mt-1.5 block text-sm text-muted line-clamp-1">{l.excerpt}</span>
@@ -49,10 +53,14 @@ export async function ServiceAreasSection({ limit = 12 }: { limit?: number }) {
           ))}
         </div>
 
-        <div className="mt-8 text-center">
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link href="/service-areas/" className="btn btn-outline">
             View All Service Areas
             <Icon name="arrow-right" size={16} />
+          </Link>
+          <Link href="/free-estimate/" className="btn btn-primary">
+            Get a Free Estimate
+            <Icon name="send" size={16} />
           </Link>
         </div>
       </div>

@@ -20,12 +20,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "before-after/",
     "service-areas/",
     "reviews/",
-    "financing/",
     "about/",
     "faq/",
     "blog/",
     "contact/",
     "free-estimate/",
+    "admin-dashboard/",
   ];
 
   const now = new Date();

@@ -749,15 +749,8 @@ async function main() {
   });
   console.log("  offers: 2");
 
-  // ---------------------------------------------------------- financing
-  const financing = [
-    { name: "Flexible Payment Plans", description: "Spread the cost of your roof over manageable monthly payments. Subject to credit approval by the lender.", providerName: "Demo Finance Partner", providerUrl: "" },
-    { name: "Deferred Interest Options", description: "Promotional periods may be available for qualified applicants. Terms are set by the lender and disclosed at application.", providerName: "Demo Finance Partner", providerUrl: "" },
-  ];
-  for (const f of financing) {
-    await prisma.financingOption.create({ data: f });
-  }
-  console.log(`  financing options: ${financing.length}`);
+  // Note: financing was removed from the platform (no Financing page or admin
+  // module). The financing_options table remains for backward compatibility.
 
   // --------------------------------------------------------------- forms
   const estimateForm = await prisma.form.upsert({
@@ -834,11 +827,10 @@ async function main() {
     { label: "Services", url: "/roofing-services/", order: 1 },
     { label: "Projects", url: "/projects/", order: 2 },
     { label: "Service Areas", url: "/service-areas/", order: 3 },
-    { label: "Financing", url: "/financing/", order: 4 },
-    { label: "About", url: "/about/", order: 5 },
-    { label: "Reviews", url: "/reviews/", order: 6 },
-    { label: "Blog", url: "/blog/", order: 7 },
-    { label: "Contact", url: "/contact/", order: 8 },
+    { label: "About", url: "/about/", order: 4 },
+    { label: "Reviews", url: "/reviews/", order: 5 },
+    { label: "Blog", url: "/blog/", order: 6 },
+    { label: "Contact", url: "/contact/", order: 7 },
   ];
   for (const slug of ["header", "footer", "mobile"]) {
     const existing = await prisma.menu.findUnique({ where: { slug }, select: { id: true } });

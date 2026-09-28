@@ -8,7 +8,6 @@ import { ProcessSteps } from "@/components/site/process-steps";
 import { ProjectsGrid } from "@/components/site/project-card";
 import { BeforeAfter } from "@/components/site/before-after";
 import { ReviewsGrid } from "@/components/site/review-card";
-import { FinancingBanner } from "@/components/site/financing-banner";
 import { FaqAccordion } from "@/components/site/faq-accordion";
 import { ServiceAreasSection } from "@/components/site/service-areas-section";
 import { CtaSection } from "@/components/site/cta-section";
@@ -194,17 +193,6 @@ export default async function ServiceDetailPage({ params }: { params: Params }) 
                 <p className="mt-1.5 text-sm leading-relaxed text-muted">{service.warranty}</p>
               </div>
             ) : null}
-
-            {service.financingNote ? (
-              <div className="card bg-primary p-6 text-white">
-                <Icon name="badge" size={20} className="text-accent" />
-                <h3 className="mt-3 text-sm text-white">Financing</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-white/75">{service.financingNote}</p>
-                <a href="/financing/" className="btn btn-accent btn-sm mt-4">
-                  Financing Options
-                </a>
-              </div>
-            ) : null}
           </aside>
         </div>
       </section>
@@ -285,8 +273,6 @@ export default async function ServiceDetailPage({ params }: { params: Params }) 
           </div>
         </section>
       ) : null}
-
-      <FinancingBanner />
 
       {/* FAQ */}
       {allFaqs.length ? (
