@@ -26,6 +26,8 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+.env.backup
+*.backup
 
 # database
 *.db
